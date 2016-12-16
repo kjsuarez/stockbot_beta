@@ -7,7 +7,7 @@ require_relative 'google_stock_scraper'
 require_relative 'stock_day_of_api'
 require_relative 'historical_data'
 require 'date'
-require 'json'
+
 # require_relative 'retro_tester'
 # screen and collect stocks
 
@@ -27,10 +27,10 @@ def multi_stock_retro_test
   data_arry.each_with_index{ |stock, index|
     puts "#{index} out of #{data_arry.length}"
     result = retro_test(stock[:symbol])
-    total_output << result) unless result.nil? || result[:results].empty?
+    (total_output << result) unless result.nil? || result[:results].empty?
   }
 
-  File.write('retro_test_down_4_up_2.txt', total_output.to_json)
+  File.write('results/retro_test_down_4_up_2.txt', total_output.to_json)
 
   return total_output
 end
@@ -61,17 +61,11 @@ def retro_test(sym="ge", p_change_down=-4, p_change_up=2)
 
      # if it passes algorithm
      if percent_change < p_change_down
-       251.times { |sub_i| # build historical_data for 1 year before 'today'
-         x[sub_i] = sub_i
-         y[sub_i] = arry[i+start-(251-sub_i)][1].to_f
-       }
 
-      # get slope of year before 'today'
-       lineFit = LineFit.new
-       lineFit.setData(x,y)
-       intercept, slope = lineFit.coefficients
+      year_slope = x_days_slope(arry, i, 251, 5)[1]
+      month_slope = x_days_slope(arry, i, 30, 5)[1]
        #puts "slope of year upto today: #{slope}"
-        if slope > 0.02
+        if year_slope > 0.02 && year_slope < 0.046 && month_slope < 0.046
           #puts "good enough"
           results[results_index] = {symbol: sym, bought: today}
           summery_data[:number_of_buys]+=1
@@ -138,6 +132,14 @@ def retro_test(sym="ge", p_change_down=-4, p_change_up=2)
     return nil
   end
 
+end
+
+def x_days_slope(data, index, days, years_of_data)
+  x = []; y = []
+  start = data.count / years_of_data
+  days.times { |sub_i| x[sub_i] = sub_i; y[sub_i] = data[index+start-(days-sub_i)][1].to_f; }
+  lineFit = LineFit.new; lineFit.setData(x,y)
+  lineFit.coefficients
 end
 
 #retro_test("atvi")
