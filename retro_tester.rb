@@ -64,10 +64,11 @@ def retro_test(sym="ge", p_change_down=-4, p_change_up=2)
 
       year_slope = x_days_slope(arry, i, 251, 5)[1]
       month_slope = x_days_slope(arry, i, 30, 5)[1]
+      week_slope = x_days_slope(arry, i, 10, 5)[1]
        #puts "slope of year upto today: #{slope}"
         if year_slope > 0.02 && year_slope < 0.046 && month_slope < 0.046
           #puts "good enough"
-          results[results_index] = {symbol: sym, bought: today}
+          results[results_index] = {symbol: sym, year_slope: year_slope, month_slope: month_slope, week_slope: week_slope, bought: today}
           summery_data[:number_of_buys]+=1
           # find next date at which sell condition met
           range = (i+start+1)..arry.count-1
