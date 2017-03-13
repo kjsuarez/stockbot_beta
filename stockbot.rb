@@ -4,49 +4,81 @@ require 'uri'
 require 'open-uri'
 require 'json'
 require_relative 'google_stock_scraper'
-require_relative 'stock_day_of_api'
+require_relative 'stock_api_toucher'
 require_relative 'historical_data'
 
-# grab stock screener html
-# scrape symbols and prices
-# assemble proper array
-data_arry = GoogleStockScraper.new.results  # [{:symbol,:price},{:symbol,:price},{:symbol,:price}]
+class StockBot
+  attr_reader :api_toucher, :minimum_percent_change, :symbols, :year_slope_ceiling, :year_slope_floor
+  attr_accessor :data_arry
 
-# cherrypick based on %down today
-  # collect all symbols
-symbols = []; day_change = []; percent_change = []
-minimum_percent_change = -3
-data_arry.each_index {|i| symbols[i] = data_arry[i][:symbol] }
+  def initialize()
+    @data_arry = GoogleStockScraper.new.results
+    @api_toucher = StockApiToucher.new
+    @minimum_percent_change = -3
+    @year_slope_ceiling = 0.046
+    @year_slope_floor = 0.02
+    @symbols = symbols
+  end
 
-  # divide symbols into url friendly chunks
-((symbols.count/1000)+1).times {|n|
-  str = symbols[n*1000..((n+1)*1000)-1].to_s
-  str.gsub!("\\n", ''); str.gsub!(" ", ''); str.gsub!(/\[\]/, ''); str.gsub!('"',''); str.gsub!(/\[|\]/,'')
-  # query yahoo with each chunk
-  day_change << yahoo_api_multi_stock(str)
-}
-day_change.flatten!
+  def symbols
+    symbols = []
+    data_arry.each_index {|i| symbols[i] = data_arry[i][:symbol] }
+    return symbols
+  end
 
-puts "day change: #{day_change}"
+  # get yahoo day change data via symbols
+  def day_change
+    api_toucher.yahoo_multistock_day_change(symbols)
+  end
 
-data_arry.each_with_index{ |data,i| data_arry[i][:percent_change] = (day_change[i].to_f / data_arry[i][:price])*100}
-puts "percent change: #{data_arry}"
+  def add_percent_change
+    temp = day_change
+    data_arry.each_with_index { |data,i|
+      data_arry[i][:percent_change] = (temp[i].to_f / data_arry[i][:price])*100
+    }
+  end
 
-filtered_data_array = data_arry.select{|data| data[:percent_change].to_f < minimum_percent_change}
+  def add_last_year_slope
+    @data_arry = last_year_slope_multiple(data_arry)
+  end
 
+  def add_last_month_slope
+    @data_arry = last_month_slope_multiple(data_arry)
+  end
 
-puts "filtered by percent change:  #{filtered_data_array}"
+  def filter_by_percent_change
+    @data_arry = data_arry.select { |data|
+      data[:percent_change].to_f < minimum_percent_change
+    }
+  end
 
-# cherrypick based on slope (model after CC)
-filtered_data_array = last_year_slope_multiple(filtered_data_array)
+  def filter_by_last_year_slope
+    @data_arry = data_arry.select { |data|
+      data[:year_slope] > year_slope_floor &&
+      data[:year_slope] < year_slope_ceiling
+    }
+  end
 
-puts "data: #{filtered_data_array}"
+  def filter_by_last_month_slope
+    @data_arry = data_arry.select { |data|
+      data[:month_slope] < 0.046
+    }
+  end
 
-final_filter = filtered_data_array.select{|data| data[:slope] > 0.02}
+  def run
+    kibot_login
+    add_percent_change
+    filter_by_percent_change
+    add_last_year_slope
+    filter_by_last_year_slope
+    add_last_month_slope
+    filter_by_last_month_slope
+  end
 
-puts "***"
-final_filter.each {|data| puts data}
+  def print
+    puts "***"
+    data_arry.each {|data| puts data}
+    puts "***"
+  end
 
-
-
-#
+end

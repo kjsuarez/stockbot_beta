@@ -2,6 +2,22 @@ require 'net/http'
 require 'uri'
 require 'json'
 
+class StockApiToucher  # gets stock info from various APIs
+
+  def yahoo_multistock_day_change(symbols)
+     day_change = [];
+
+    ((symbols.count/1000)+1).times {|n|
+      str = symbols[n*1000..((n+1)*1000)-1].to_s
+      str.gsub!("\\n", ''); str.gsub!(" ", ''); str.gsub!(/\[\]/, ''); str.gsub!('"',''); str.gsub!(/\[|\]/,'')
+      # query yahoo with each chunk
+      day_change << yahoo_api_multi_stock(str)
+    }
+
+    day_change.flatten!
+  end
+end
+
 def markitondemand_api_data sym
   uri = URI.parse("http://dev.markitondemand.com/MODApis/Api/v2/Quote/jsonp?symbol=#{sym}&callback=x")
   res = Net::HTTP.get_response(uri)
@@ -72,9 +88,3 @@ end
 # res = res.body.gsub(/x\(|\)/, '')
 # res = JSON.parse(res)
 # puts res['Change']
-
-#
-#
-# .gsub!("\\n", '')
-# .gsub!(" ", '')
-# .gsub!(/\[\]/, '')

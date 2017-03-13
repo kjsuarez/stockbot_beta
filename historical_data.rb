@@ -4,11 +4,11 @@ require 'json'
 require 'linefit'
 
 def data_is_clean?(res)
-  res.body.length > 1000
+  res.body.length > 500
 end
 
 def data_is_mature?(arry, years=5)
-  arry.count >= ((((years*365)*(5.0/7.0)) - (10*years)).to_i)
+  arry.count >= mature_age(years)
 end
 
 def mature_age(years)
@@ -32,37 +32,26 @@ def kibot_login
     sleep(2)
 end
 
-def last_year_slope(sym)
-  years = 1
-  # get naked data
-  uri = URI.parse("http://api.kibot.com/?action=history&symbol=#{sym}&interval=daily&period=365")
-  res = Net::HTTP.get_response(uri)
+def last_x_days_slope(sym, days)
 
-  # check that data is legit
-  if data_is_clean?(res)
-    # split data on line breaks
-    arry = res.body.split(/\r\n/)
-    # each element of arry split on ','
-    arry.each_index {|x| arry[x] = arry[x].split(',')}
-    if data_is_mature?(arry)
-      # build xy arrays based on arry
-      x = []; arry.length.times {|count| x[count] = count}
-      y = []; arry.each_index {|indx| y[indx] = arry[indx][1].to_f}
+  arry = x_days_data(sym, days)
 
-      # get line of best fit
-      lineFit = LineFit.new
-      lineFit.setData(x,y)
-      intercept, slope = lineFit.coefficients
-      puts "slope: #{slope}, y intercept: #{intercept}"
-      return {symbol: sym, slope: lineFit.coefficients[1], intercept: lineFit.coefficients[0]}
-    else
-      puts "immature stock"
-      return {symbol: sym, slope: 0, intercept: 0}
-    end
+  if arry.is_a? Array
+    # build xy arrays based on arry
+    x = []; arry.length.times {|count| x[count] = count}
+    y = []; arry.each_index {|indx| y[indx] = arry[indx][1].to_f}
+
+    # get line of best fit
+    lineFit = LineFit.new
+    lineFit.setData(x,y)
+    intercept, slope = lineFit.coefficients
+    puts "slope: #{slope}, y intercept: #{intercept}"
+    return {symbol: sym, slope: lineFit.coefficients[1], intercept: lineFit.coefficients[0]}
   else
-    puts "bad data"
+    puts "immature stock"
     return {symbol: sym, slope: 0, intercept: 0}
   end
+
 end
 
 def last_year_slope_multiple(data_arry)
@@ -73,10 +62,49 @@ def last_year_slope_multiple(data_arry)
   kibot_login
 
   count.times { |i|
-    data = last_year_slope(data_arry[i][:symbol])
-    data_arry[i][:slope] = data[:slope]
+    p "#{i}/#{count}"
+    data = last_x_days_slope(data_arry[i][:symbol], 365)
+    data_arry[i][:year_slope] = data[:slope]
   }
   data_arry
+end
+
+def last_month_slope_multiple(data_arry)
+  count = data_arry.count
+  slope_arry = []
+
+  puts "kibot login"
+  kibot_login
+
+  count.times { |i|
+    p "#{i}/#{count}"
+    data = last_x_days_slope(data_arry[i][:symbol], 30)
+    data_arry[i][:month_slope] = data[:slope]
+  }
+  data_arry
+end
+
+def x_days_data(sym, days)
+
+  # get naked data
+  uri = URI.parse("http://api.kibot.com/?action=history&symbol=#{sym}&interval=daily&period=#{days}")
+  res = Net::HTTP.get_response(uri)
+
+  # check that data is legit
+  if data_is_clean?(res)
+
+    arry = clean_data_array(res)
+
+    if arry.count >= mature_age(days/365.0)
+      return arry
+    else
+      puts "immature stock: #{mature_age(days/365.0)} vs. #{arry.count}"
+      return {symbol: sym, slope: 0, intercept: 0}
+    end
+  else
+    puts "bad data"
+    return {symbol: sym, slope: 0, intercept: 0}
+  end
 end
 
 def x_years_data(sym, years)

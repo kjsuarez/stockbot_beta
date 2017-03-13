@@ -4,7 +4,7 @@ require 'uri'
 require 'open-uri'
 require 'json'
 require_relative 'google_stock_scraper'
-require_relative 'stock_day_of_api'
+require_relative 'stock_api_toucher'
 require_relative 'historical_data'
 require 'date'
 
