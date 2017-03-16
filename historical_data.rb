@@ -4,6 +4,13 @@ require 'json'
 require 'linefit'
 
 def data_is_clean?(res)
+  !res.body.include?("Symbol Not Found") &&
+  !res.body.include?("Data Not Found") &&
+  !res.body.include?("Not Logged In") &&
+  !res.body.include?("Bad Request")
+end
+
+def yearly_data_is_clean?(res)
   res.body.length > 500
 end
 
@@ -12,7 +19,7 @@ def data_is_mature?(arry, years=5)
 end
 
 def mature_age(years)
-  ((((years*365)*(5.0/7.0)) - (9*years)).to_i)-1
+  ((((years*365)*(5.0/7.0)) - (9*years)).to_i)-2
 end
 
 def clean_data_array(res)
