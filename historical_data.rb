@@ -136,3 +136,25 @@ def x_years_data(sym, years)
     return {symbol: sym, slope: 0, intercept: 0}
   end
 end
+
+def slope_of_data(data_arry)
+  x = []; data_arry.length.times {|count| x[count] = count}
+  y = []; data_arry.each_index {|indx| y[indx] = data_arry[indx][1].to_f}
+
+  # get line of best fit
+  lineFit = LineFit.new
+  lineFit.setData(x,y)
+  intercept, slope = lineFit.coefficients
+  return slope
+end
+
+def erratic?(data_arry, relevant_period)
+  jolts = []
+  (data_arry.count-relevant_period).times{|i|
+     slope = slope_of_data(data_arry[i..(i+relevant_period)])
+    if slope.abs > 0.30
+      jolts << data_arry[i][0]
+    end
+  }
+  jolts.any?
+end

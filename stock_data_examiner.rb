@@ -1,0 +1,4 @@
+class StockDataExaminer
+
+
+end

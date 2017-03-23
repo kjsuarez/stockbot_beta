@@ -65,6 +65,18 @@ class StockBot
     }
   end
 
+  def filter_by_erratic_nature
+    @data_arry = data_arry.select { |data|
+      !erratic?(x_years_data(data[:symbol], 1), 15)
+    }
+  end
+
+  def filter_by_maturaty
+    @data_arry = data_arry.select { |data|
+      data_is_mature?(x_years_data(data[:symbol], 5))
+    }
+  end
+
   def run
     add_percent_change
     filter_by_percent_change
@@ -72,6 +84,8 @@ class StockBot
     filter_by_last_year_slope
     add_last_month_slope
     filter_by_last_month_slope
+    filter_by_erratic_nature
+    filter_by_maturaty
   end
 
   def print
