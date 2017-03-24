@@ -148,11 +148,11 @@ def slope_of_data(data_arry)
   return slope
 end
 
-def erratic?(data_arry, relevant_period)
+def erratic?(data_arry, relevant_period, tolerance)
   jolts = []
   (data_arry.count-relevant_period).times{|i|
      slope = slope_of_data(data_arry[i..(i+relevant_period)])
-    if slope.abs > 0.30
+    if slope.abs > tolerance
       jolts << data_arry[i][0]
     end
   }

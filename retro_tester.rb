@@ -11,7 +11,7 @@ require 'date'
 # require_relative 'retro_tester'
 
 class RetroTester
-  attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy, :maximum_percent_down_to_buy, :percent_up_to_sell, :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng, :month_slope_floor
+  attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy, :maximum_percent_down_to_buy, :percent_up_to_sell, :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng, :month_slope_floor, :radical_period, :radical_tolerance
   attr_accessor :data_arry, :total_output, :results
   def initialize(years_of_data: 5)
     #@data_arry = GoogleStockScraper.new.results
@@ -24,6 +24,8 @@ class RetroTester
     @year_slope_floor = 0.02
     @month_slope_ceilng = 0.046
     @month_slope_floor = -0.5
+    @radical_period = 15
+    @radical_tolerance = 0.3
     @total_output = []
     @results = []
   end
@@ -59,9 +61,6 @@ class RetroTester
       results_index = 0
       summery_data = {symbol: sym, number_of_buys: 0, number_of_sells: 0, longest_wait: 0}
 
-      # puts "data array size: #{arry.count}
-      #   start index: #{start}"
-
       (arry.count - start).times { |i|   # [251..1256]
 
        today = arry[i+start] # the day in history we care about
@@ -79,8 +78,12 @@ class RetroTester
         year_slope = x_days_slope(arry, i, 251, years_of_data)[1]
         month_slope = x_days_slope(arry, i, 30, years_of_data)[1]
         week_slope = x_days_slope(arry, i, 10, years_of_data)[1]
+
+        last_year_of_data_from_this_point_in_history = arry[i..i+start]
+        is_low_volatility = !erratic?(last_year_of_data_from_this_point_in_history, radical_period, radical_tolerance)
+
          #puts "slope of year upto today: #{slope}"
-          if year_slope > year_slope_floor && year_slope < year_slope_ceiling && month_slope < month_slope_ceilng && month_slope > month_slope_floor
+          if year_slope > year_slope_floor && year_slope < year_slope_ceiling && month_slope < month_slope_ceilng && month_slope > month_slope_floor && is_low_volatility
             #puts "good enough"
             results[results_index] = {symbol: sym, year_slope: year_slope, month_slope: month_slope, week_slope: week_slope, bought: today}
             summery_data[:number_of_buys]+=1

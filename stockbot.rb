@@ -67,7 +67,7 @@ class StockBot
 
   def filter_by_erratic_nature
     @data_arry = data_arry.select { |data|
-      !erratic?(x_years_data(data[:symbol], 1), 15)
+      !erratic?(x_years_data(data[:symbol], 1), 15, 0.30)
     }
   end
 
