@@ -11,9 +11,17 @@ class GoogleStockScraper
   lowest_price = 1
   highest_price = 50
 
+  space = "%20"
+  less_than = "%3C"
+  greater_than = "%3E"
+  equals = "%3D"
+  quote = "%22"
+  also = "%26"
+  
   #capture stock screener html
   def capture
-    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange%20%3D%3D%20%22NASDAQ%22)%20%26%20(last_price%20%3E%201)%20%26%20(last_price%20%3C%2050)%5D&restype=company&noIL=1")
+                                                                      # [(exchange == "NASDAQ") & (last_price > 1) & (last_price < 50)]
+    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{space}#{equals}#{equals}#{space}#{quote}NASDAQ#{quote})#{space}#{also}#{space}(last_price#{space}#{greater_than}#{space}1)#{space}#{also}#{space}(last_price#{space}#{less_than}#{space}50)%5D&restype=company&noIL=1")
     doc = Nokogiri::HTML(open(uri,{ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}))
     puts "data captured"
     doc

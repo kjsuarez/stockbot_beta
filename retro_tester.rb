@@ -11,11 +11,12 @@ require 'date'
 # require_relative 'retro_tester'
 
 class RetroTester
-  attr_reader :api_toucher, :minimum_percent_down_to_buy, :maximum_percent_down_to_buy, :percent_up_to_sell, :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng, :month_slope_floor
+  attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy, :maximum_percent_down_to_buy, :percent_up_to_sell, :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng, :month_slope_floor
   attr_accessor :data_arry, :total_output, :results
   def initialize()
     @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
+    @years_of_data = 5
     @minimum_percent_down_to_buy = -3
     @maximum_percent_down_to_buy = -50
     @percent_up_to_sell = 2
@@ -37,7 +38,7 @@ class RetroTester
       (total_output << result) unless result.nil? || result[:results].empty?
     }
 
-    File.write('results/retro_test_down_4_up_2.txt', total_output.to_json)
+    #File.write('results/retro_test_down_4_up_2.txt', total_output.to_json)
     save_results
     return total_output
   end
@@ -49,7 +50,7 @@ class RetroTester
 
   def retro_test(sym="ge")
   # grab historical data for past 5 years
-    years = 5
+    years = years_of_data
     arry = x_years_data(sym, years)
     if arry.is_a? Array
       # look at data for each day starting at 1 year out,
@@ -75,9 +76,9 @@ class RetroTester
        if percent_change < minimum_percent_down_to_buy &&
           percent_change > maximum_percent_down_to_buy
 
-        year_slope = x_days_slope(arry, i, 251, 5)[1]
-        month_slope = x_days_slope(arry, i, 30, 5)[1]
-        week_slope = x_days_slope(arry, i, 10, 5)[1]
+        year_slope = x_days_slope(arry, i, 251, years_of_data)[1]
+        month_slope = x_days_slope(arry, i, 30, years_of_data)[1]
+        week_slope = x_days_slope(arry, i, 10, years_of_data)[1]
          #puts "slope of year upto today: #{slope}"
           if year_slope > year_slope_floor && year_slope < year_slope_ceiling && month_slope < month_slope_ceilng && month_slope > month_slope_floor
             #puts "good enough"
@@ -193,5 +194,5 @@ class RetroTester
 end
 
 
-tester = RetroTester.new
-tester.print_stats
+ tester = RetroTester.new
+ tester.print_stats
