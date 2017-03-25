@@ -11,10 +11,15 @@ require 'date'
 # require_relative 'retro_tester'
 
 class RetroTester
-  attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy, :maximum_percent_down_to_buy, :percent_up_to_sell, :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng, :month_slope_floor, :radical_period, :radical_tolerance
-  attr_accessor :data_arry, :total_output, :results
-  def initialize(check_volatility: false, years_of_data: 5)
+  attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy,
+              :maximum_percent_down_to_buy, :percent_up_to_sell,
+              :year_slope_ceiling, :year_slope_floor, :month_slope_ceilng,
+              :month_slope_floor, :radical_period, :radical_tolerance
 
+  attr_accessor :data_arry, :total_output, :results
+
+  def initialize(check_volatility: false, years_of_data: 5)
+    #@data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
     @minimum_percent_down_to_buy = -3
@@ -204,6 +209,5 @@ class RetroTester
 end
 
 
- tester = RetroTester.new
- puts tester.years_of_data
+ # tester = RetroTester.new
  #tester.print_stats

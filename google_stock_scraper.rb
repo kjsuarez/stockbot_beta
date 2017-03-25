@@ -6,22 +6,27 @@ require 'json'
 require 'openssl'
 
 class GoogleStockScraper
+  attr_reader :number_of_stocks_considered, :lowest_price, :years_back_in_time
+  attr_accessor :highest_price
 
-  number_of_stocks_considered = 4000
-  lowest_price = 1
-  highest_price = 50
+  def initialize(years_back_in_time: 1)
+    @number_of_stocks_considered = 4000
+    @lowest_price = 1
+    @highest_price = 50
+    @years_back_in_time = years_back_in_time
+    compensate_for_histrical_price
+  end
 
-  space = "%20"
-  less_than = "%3C"
-  greater_than = "%3E"
-  equals = "%3D"
-  quote = "%22"
-  also = "%26"
-  
   #capture stock screener html
   def capture
+    space = "%20"
+    less_than = "%3C"
+    greater_than = "%3E"
+    equals = "%3D"
+    quote = "%22"
+    also = "%26"
                                                                       # [(exchange == "NASDAQ") & (last_price > 1) & (last_price < 50)]
-    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{space}#{equals}#{equals}#{space}#{quote}NASDAQ#{quote})#{space}#{also}#{space}(last_price#{space}#{greater_than}#{space}1)#{space}#{also}#{space}(last_price#{space}#{less_than}#{space}50)%5D&restype=company&noIL=1")
+    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{space}#{equals}#{equals}#{space}#{quote}NASDAQ#{quote})#{space}#{also}#{space}(last_price#{space}#{greater_than}#{space}#{lowest_price})#{space}#{also}#{space}(last_price#{space}#{less_than}#{space}#{highest_price})%5D&restype=company&noIL=1")
     doc = Nokogiri::HTML(open(uri,{ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}))
     puts "data captured"
     doc
@@ -39,7 +44,9 @@ class GoogleStockScraper
 
 
 
-
+  def compensate_for_histrical_price
+    @highest_price = highest_price + (2 * years_back_in_time)
+  end
 
 
   #assemble proper array
@@ -53,3 +60,6 @@ class GoogleStockScraper
     total
   end
 end
+
+# scraper = GoogleStockScraper.new
+# puts scraper.results
