@@ -20,7 +20,7 @@ class RetroTester
   attr_accessor :data_arry, :total_output, :results
 
   def initialize(check_volatility: false, years_of_data: 5)
-    @data_arry = GoogleStockScraper.new.results
+    #@data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
     @minimum_percent_down_to_buy = -3
