@@ -181,8 +181,28 @@ class RetroTester
     results.select{ |purchase| purchase[:days_before_sell] >= x && purchase[:days_before_sell] <= y }
   end
 
+  def x_to_y_day_sales_for_week_slope_less_than(slope, x, y)
+    x_to_y_day_sales(x,y).select { |sale| sale[:week_slope] < slope}
+  end
+
   def percent_of_total_sales(x)
     (x / results.count.to_f * 100).round(2)
+  end
+
+  def stats_for_week_slope_under(number)
+    unresolved_count = results.select{ |x| x[:sold] == "not yet sold" }.count
+    puts "***"
+    puts "total purchases: #{results.count}"
+    puts "1-2 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,1,2).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,1,2).count)}% of purchases"
+    puts "3-5 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,3,5).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,3,5).count)}% of purchases"
+    puts "6-10 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,6,10).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,6,10).count)}% of purchases"
+    puts "11-20 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,11,20).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,11,20).count)}% of purchases"
+    puts "21-50 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,21,50).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,21,50).count)}% of purchases"
+    puts "51-100 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,51,100).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,51,100).count)}% of purchases"
+    puts "101-365 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,101,365).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,101,365).count)}% of purchases"
+    puts "366-1000 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,366,1000).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,366,1000).count)}% of purchases"
+    puts "unresolved sales: #{unresolved_count}, #{percent_of_total_sales(unresolved_count)}% of purchases"
+    puts "***"
   end
 
   def print_stats
