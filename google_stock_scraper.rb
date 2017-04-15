@@ -10,7 +10,7 @@ class GoogleStockScraper
   attr_accessor :highest_price
 
   def initialize(years_back_in_time: 1)
-    @number_of_stocks_considered = 4000
+    @number_of_stocks_considered = 10000
     @lowest_price = 1
     @highest_price = 50
     @years_back_in_time = years_back_in_time
@@ -22,11 +22,20 @@ class GoogleStockScraper
     space = "%20"
     less_than = "%3C"
     greater_than = "%3E"
-    equals = "%3D"
+    equals = "%3D%3D"
     quote = "%22"
     also = "%26"
+    orr = "%7C"
                                                                       # [(exchange == "NASDAQ") & (last_price > 1) & (last_price < 50)]
-    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{space}#{equals}#{equals}#{space}#{quote}NASDAQ#{quote})#{space}#{also}#{space}(last_price#{space}#{greater_than}#{space}#{lowest_price})#{space}#{also}#{space}(last_price#{space}#{less_than}#{space}#{highest_price})%5D&restype=company&noIL=1")
+    #uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+
+
+                                                                      # [(exchange == "NASDAQ" | exchange == "NYSE") & (last_price > 1) & (last_price < 50)]
+    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+
+                                                                      # [(exchange == "NASDAQ" | exchange == "NYSE" | exchange == "IBEX") & (last_price > 1) & (last_price < 50)]
+    #uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote}#{orr}exchange#{equals}#{quote}IBEX#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+
     doc = Nokogiri::HTML(open(uri,{ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}))
     puts "data captured"
     doc

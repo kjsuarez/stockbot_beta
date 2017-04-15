@@ -20,11 +20,11 @@ class RetroTester
   attr_accessor :data_arry, :total_output, :results
 
   def initialize(check_volatility: false, years_of_data: 5)
-    #@data_arry = GoogleStockScraper.new.results
+    @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
-    @minimum_percent_down_to_buy = -3
-    @maximum_percent_down_to_buy = -50
+    @minimum_percent_down_to_buy = -5
+    @maximum_percent_down_to_buy = -10
     @percent_up_to_sell = 2
     @year_slope_ceiling = 0.046
     @year_slope_floor = 0.02
@@ -190,7 +190,8 @@ class RetroTester
   end
 
   def stats_for_week_slope_under(number)
-    unresolved_count = results.select{ |x| x[:sold] == "not yet sold" }.count
+    unresolved_under_20_count = results.select{ |x| x[:sold] == "not yet sold" && x[:days_before_sell] <= 20}.count
+    unresolved_over_20_count = results.select{ |x| x[:sold] == "not yet sold" && x[:days_before_sell] > 20}.count
     puts "***"
     puts "total purchases: #{results.count}"
     puts "1-2 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,1,2).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,1,2).count)}% of purchases"
@@ -201,13 +202,15 @@ class RetroTester
     puts "51-100 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,51,100).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,51,100).count)}% of purchases"
     puts "101-365 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,101,365).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,101,365).count)}% of purchases"
     puts "366-1000 days before sale: #{x_to_y_day_sales_for_week_slope_less_than(number,366,1000).count}, #{percent_of_total_sales(x_to_y_day_sales_for_week_slope_less_than(number,366,1000).count)}% of purchases"
-    puts "unresolved sales: #{unresolved_count}, #{percent_of_total_sales(unresolved_count)}% of purchases"
+    puts "unresolved sales: #{unresolved_over_20_count}, #{percent_of_total_sales(unresolved_over_20_count)}% of purchases"
+    puts "too young to tell: #{unresolved_under_20_count}, #{percent_of_total_sales(unresolved_under_20_count)}% of purchases"
     puts "***"
   end
 
   def print_stats
     unless total_output.empty?
-      unresolved_count = results.select{ |x| x[:sold] == "not yet sold" }.count
+      unresolved_under_20_count = results.select{ |x| x[:sold] == "not yet sold" && x[:days_before_sell] <= 20}.count
+      unresolved_over_20_count = results.select{ |x| x[:sold] == "not yet sold" && x[:days_before_sell] > 20}.count
       puts "***"
       puts "total purchases: #{results.count}"
       puts "1 day before sale: #{x_day_sales(1).count}, #{percent_of_total_sales(x_day_sales(1).count)}% of purchases"
@@ -219,7 +222,8 @@ class RetroTester
       puts "51-100 days before sale: #{x_to_y_day_sales(51,100).count}, #{percent_of_total_sales(x_to_y_day_sales(51,100).count)}% of purchases"
       puts "101-365 days before sale: #{x_to_y_day_sales(101,365).count}, #{percent_of_total_sales(x_to_y_day_sales(101,365).count)}% of purchases"
       puts "366-1000 days before sale: #{x_to_y_day_sales(366,1000).count}, #{percent_of_total_sales(x_to_y_day_sales(366,1000).count)}% of purchases"
-      puts "unresolved sales: #{unresolved_count}, #{percent_of_total_sales(unresolved_count)}% of purchases"
+      puts "unresolved sales: #{unresolved_over_20_count}, #{percent_of_total_sales(unresolved_over_20_count)}% of purchases"
+      puts "too young to tell: #{unresolved_under_20_count}, #{percent_of_total_sales(unresolved_under_20_count)}% of purchases"
       puts "***"
 
     else
