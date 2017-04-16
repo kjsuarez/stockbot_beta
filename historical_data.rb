@@ -46,7 +46,7 @@ def last_x_days_slope(sym, days)
   if arry.is_a? Array
     # build xy arrays based on arry
     x = []; arry.length.times {|count| x[count] = count}
-    y = []; arry.each_index {|indx| y[indx] = arry[indx][1].to_f}
+    y = []; arry.each_index {|indx| y[indx] = arry[indx][:open].to_f}
 
     # get line of best fit
     lineFit = LineFit.new
@@ -103,6 +103,7 @@ def x_days_data(sym, days)
     arry = clean_data_array(res)
 
     if arry.count >= mature_age(days/365.0)
+      arry = clean_up_kibot_data(arry)
       return arry
     else
       puts "immature stock: #{mature_age(days/365.0)} vs. #{arry.count}"
@@ -126,6 +127,7 @@ def x_years_data(sym, years)
     arry = clean_data_array(res)
 
     if arry.count >= mature_age(years)
+      arry = clean_up_kibot_data(arry)
       return arry
     else
       puts "immature stock: #{mature_age(years)} vs. #{arry.count}"
@@ -139,7 +141,7 @@ end
 
 def slope_of_data(data_arry)
   x = []; data_arry.length.times {|count| x[count] = count}
-  y = []; data_arry.each_index {|indx| y[indx] = data_arry[indx][1].to_f}
+  y = []; data_arry.each_index {|indx| y[indx] = data_arry[indx][:open].to_f}
 
   # get line of best fit
   lineFit = LineFit.new
@@ -152,10 +154,22 @@ def erratic?(data_arry, relevant_period, tolerance)
   jolts = []
   (data_arry.count-relevant_period).times{|i|
      slope = slope_of_data(data_arry[i..(i+relevant_period)])
-     #puts "days #{i}-#{i+relevant_period}, slope: #{slope}, date: #{data_arry[i][0]}-#{data_arry[i+relevant_period][0]}"
+     #puts "days #{i}-#{i+relevant_period}, slope: #{slope}, date: #{data_arry[i][:date]}-#{data_arry[i+relevant_period][:date]}"
     if slope.abs > tolerance
-      jolts << data_arry[i][0]
+      jolts << data_arry[i][:date]
     end
   }
   jolts.any?
+end
+
+def clean_up_kibot_data(data)
+  data.each_with_index do |day, i|
+    day = {date: day[0], open: day[1].to_f, high: day[2].to_f, low: day[3].to_f, close: day[4].to_f}
+    day[:date] = str_to_date(day[:date])
+    data[i] = day
+  end
+end
+
+def str_to_date(str)
+  DateTime.strptime(str, '%m/%d/%Y')
 end

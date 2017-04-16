@@ -19,7 +19,7 @@ class RetroTester
 
   attr_accessor :data_arry, :total_output, :results
 
-  def initialize(check_volatility: false, years_of_data: 5)
+  def initialize(check_volatility: false, years_of_data: 8)
     @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
@@ -72,13 +72,12 @@ class RetroTester
 
        today = arry[i+start] # the day in history we care about
        yesterday = arry[i+start-1]
-       day_change = today[4].to_f - yesterday[4].to_f
-       percent_change = (day_change / yesterday[4].to_f)*100
+       day_change = today[:close] - yesterday[:close]
+       percent_change = (day_change / yesterday[:close])*100
        x = []; y = []
 
-        # puts "#{today[0]}- closing price: #{today[4]}  percent change: #{percent_change}"
+        # puts "#{today[:date]}- closing price: #{today[:close]}  percent change: #{percent_change}"
 
-       # if it passes algorithm
        if percent_change < minimum_percent_down_to_buy &&
           percent_change > maximum_percent_down_to_buy
 
@@ -108,17 +107,17 @@ class RetroTester
             range.each { |terc_i|
               #puts "check sell on day #{terc_i}"
               could_be = arry[terc_i]
-              daily_high = arry[terc_i][2].to_f
+              daily_high = arry[terc_i][:high]
 
-              goal = (today[4].to_f) * (1+(0.01 * percent_up_to_sell))
+              goal = (today[:close]) * (1+(0.01 * percent_up_to_sell))
               if daily_high >= goal
                 # add to element to purchase array
                 results[results_index][:sold] = could_be
 
                 summery_data[:number_of_sells]+=1
 
-                bought_date = DateTime.strptime(results[results_index][:bought][0], '%m/%d/%Y')
-                sold_date = DateTime.strptime(results[results_index][:sold][0], '%m/%d/%Y')
+                bought_date = results[results_index][:bought][:date]
+                sold_date = results[results_index][:sold][:date]
                 days_till_sell = (sold_date - bought_date).to_i
 
                 results[results_index][:days_before_sell] = days_till_sell
@@ -135,8 +134,8 @@ class RetroTester
               if results[results_index][:sold].nil?
                 results[results_index][:sold] = "not yet sold"
 
-                bought_date = DateTime.strptime(results[results_index][:bought][0], '%m/%d/%Y')
-                sold_date = DateTime.strptime(arry[-1][0], '%m/%d/%Y')
+                bought_date = results[results_index][:bought][:date]
+                sold_date = arry[-1][:date]
                 days_till_sell = (sold_date - bought_date).to_i
 
                 results[results_index][:days_before_sell] = days_till_sell
@@ -168,7 +167,7 @@ class RetroTester
   def x_days_slope(data, index, days, years_of_data)
     x = []; y = []
     start = data.count / years_of_data
-    days.times { |sub_i| x[sub_i] = sub_i; y[sub_i] = data[index+start-(days-sub_i)][1].to_f; }
+    days.times { |sub_i| x[sub_i] = sub_i; y[sub_i] = data[index+start-(days-sub_i)][:open] }
     lineFit = LineFit.new; lineFit.setData(x,y)
     lineFit.coefficients
   end
