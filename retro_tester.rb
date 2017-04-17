@@ -8,7 +8,7 @@ require_relative 'stock_api_toucher'
 require_relative 'historical_data'
 require 'date'
 
-# require_relative 'retro_tester'
+# require_relative 'retro_tester'; tester = RetroTester.new; tester.multi_stock_retro_test
 
 class RetroTester
   attr_reader :api_toucher, :years_of_data, :minimum_percent_down_to_buy,
@@ -17,9 +17,9 @@ class RetroTester
               :check_volatility, :month_slope_floor,
               :radical_period, :radical_tolerance
 
-  attr_accessor :data_arry, :total_output, :results
+  attr_accessor :data_arry, :total_output, :results, :daily_stats
 
-  def initialize(check_volatility: false, years_of_data: 8)
+  def initialize(check_volatility: false, years_of_data: 5)
     @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
@@ -35,6 +35,7 @@ class RetroTester
     @radical_tolerance = 0.3
     @total_output = []
     @results = []
+    @daily_stats = []
   end
 
   def multi_stock_retro_test
@@ -97,6 +98,9 @@ class RetroTester
          #puts "slope of year upto today: #{slope}"
           if year_slope > year_slope_floor && year_slope < year_slope_ceiling && month_slope < month_slope_ceilng && month_slope > month_slope_floor && is_low_volatility
             #puts "good enough"
+              unless daily_stats.any?{|stock| stock[:symbol] == sym}
+                daily_stats << {symbol: sym, daily_data: arry}
+              end
             results[results_index] = {symbol: sym, year_slope: year_slope, month_slope: month_slope, week_slope: week_slope, bought: today}
             summery_data[:number_of_buys]+=1
             # find next date at which sell condition met
