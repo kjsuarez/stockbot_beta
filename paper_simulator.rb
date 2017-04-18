@@ -6,6 +6,8 @@ results = tester.results
 daily_stats = tester.daily_stats
 
 cash = 1000.0
+money_spent_on_stocks = 0
+shares_per_buy = 3
 years = tester.years_of_data
 days_before_stale = 20
 back_then = (DateTime.now - (365*years)).to_date
@@ -24,10 +26,12 @@ dates.each{ |day|
   #for each of these sales
   sales.each { |day|
     #calculate profit (2% of price)
-    profit = day[:bought][:close] * 3 * 1.02
+    profit = day[:bought][:close] * shares_per_buy * 1.02
     #add profit to cash
     cash += profit
+    money_spent_on_stocks -= day[:bought][:close] * shares_per_buy
     puts "cash: #{cash}"
+    puts "stocks: #{money_spent_on_stocks}"
   }
 
   # grab purcheses from this date
@@ -38,9 +42,10 @@ dates.each{ |day|
   buys.each { |purchase|
     # if you can afford it
     price = purchase[:bought][:close]
-    if price*3 < cash
+    if price * shares_per_buy < cash
       # subtract price from cash
-      cash -= price*3
+      cash -= price * shares_per_buy
+      money_spent_on_stocks += price * shares_per_buy
       # mark purchase as paid for
       purchase[:paid_for] = true
     else
@@ -65,7 +70,7 @@ dates.each{ |day|
 
       if todays_price < purchase[:bought][:close] * 0.95
         #sell for price on this day
-        cash += todays_price
+        cash += todays_price * shares_per_buy
         # mark purchase as paid for
         purchase[:sold_prematurely] = true
       end
