@@ -31,10 +31,14 @@ class GoogleStockScraper
 
 
                                                                       # [(exchange == "NASDAQ" | exchange == "NYSE") & (last_price > 1) & (last_price < 50)]
-    uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+    uri = URI.parse("https://www.google.com/finance?start=0&num=6000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
 
-                                                                      # [(exchange == "NASDAQ" | exchange == "NYSE" | exchange == "IBEX") & (last_price > 1) & (last_price < 50)]
-    #uri = URI.parse("https://www.google.com/finance?start=0&num=4000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote}#{orr}exchange#{equals}#{quote}IBEX#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+                                                                      # [(exchange == "NASDAQ" | exchange == "NYSE") & (last_price > 1) & (last_price < 50)]
+    #uri = URI.parse("https://www.google.com/finance?start=0&num=6000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+
+                                                                      # [(exchange == "NASDAQ" | exchange == "NYSE") & (last_price > 1) & (last_price < 50)]
+    #uri = URI.parse("https://www.google.com/finance?start=0&num=6000&q=%5B(exchange#{equals}#{quote}NASDAQ#{quote}#{orr}exchange#{equals}#{quote}NYSE#{quote})#{also}(last_price#{greater_than}#{lowest_price})#{also}(last_price#{less_than}#{highest_price})%5D&restype=company&noIL=1")
+
 
     doc = Nokogiri::HTML(open(uri,{ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}))
     puts "data captured"

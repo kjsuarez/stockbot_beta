@@ -5,11 +5,12 @@ tester.multi_stock_retro_test
 results = tester.results
 daily_stats = tester.daily_stats
 
-cash = 1000.0
+cash = 10000.0
 money_spent_on_stocks = 0
 shares_per_buy = 3
 years = tester.years_of_data
 days_before_stale = 20
+percent_drop_for_premature_sale = 10
 back_then = (DateTime.now - (365*years)).to_date
 now = (DateTime.now).to_date
 dates = (back_then..now)
@@ -68,7 +69,7 @@ dates.each_with_index{ |day, index|
       #check price on this day
       todays_price = todays_data[:close]
 
-      if todays_price < purchase[:bought][:close] * 0.95
+      if todays_price < purchase[:bought][:close] * (1 - (percent_drop_for_premature_sale * 0.01))
         #sell for price on this day
         cash += todays_price * shares_per_buy
         # mark purchase as paid for
