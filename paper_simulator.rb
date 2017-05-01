@@ -14,8 +14,8 @@ back_then = (DateTime.now - (365*years)).to_date
 now = (DateTime.now).to_date
 dates = (back_then..now)
 
-
-dates.each{ |day|
+dates.each_with_index{ |day, index|
+  puts "day #{index} out of #{dates.count}"
   #look for theoretical sales on this day that are paid for
   sales = results.select { |result|
     result[:sold].class != String &&
@@ -63,7 +63,7 @@ dates.each{ |day|
 
   stale_buys.each { |purchase|
     historical_data = daily_stats.detect{|stock| stock[:symbol] == purchase[:symbol]}
-    todays_data = data.detect{|day| day[:date].to_date == purchase[:bought][:date]).to_date}
+    todays_data = historical_data[:daily_data].detect{|day| day[:date].to_date == purchase[:bought][:date].to_date}
     unless todays_data.nil?
       #check price on this day
       todays_price = todays_data[:close]
@@ -73,6 +73,7 @@ dates.each{ |day|
         cash += todays_price * shares_per_buy
         # mark purchase as paid for
         purchase[:sold_prematurely] = true
+        puts "SOLD AT A LOSS"
       end
     end
   }
