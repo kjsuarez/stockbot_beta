@@ -5,7 +5,8 @@ tester.multi_stock_retro_test
 results = tester.results
 daily_stats = tester.daily_stats
 
-cash = 10000.0
+starting_money = 10000.0
+cash = starting_money
 money_spent_on_stocks = 0
 shares_per_buy = 3
 years = tester.years_of_data
@@ -27,10 +28,10 @@ dates.each_with_index{ |day, index|
   #for each of these sales
   sales.each { |day|
     #calculate profit (2% of price)
-    profit = day[:bought][:close] * shares_per_buy * 1.02
+    profit = day[:bought][:close] * day[:shares] * 1.02
     #add profit to cash
     cash += profit
-    money_spent_on_stocks -= day[:bought][:close] * shares_per_buy
+    money_spent_on_stocks -= day[:bought][:close] * day[:shares]
     puts "cash: #{cash}"
     puts "stocks: #{money_spent_on_stocks}"
   }
@@ -40,23 +41,46 @@ dates.each_with_index{ |day, index|
     (result[:bought][:date]).to_date == day
   }
   # for each of these purchases
-  buys.each { |purchase|
-    # if you can afford it
-    price = purchase[:bought][:close]
-    if price * shares_per_buy < cash
-      # subtract price from cash
-      cash -= price * shares_per_buy
-      money_spent_on_stocks += price * shares_per_buy
-      # mark purchase as paid for
-      purchase[:paid_for] = true
-    else
-      puts "broke :("
-    end
-  }
+unless buys.empty?
+  while(cash > (starting_money/2))
+    puts "inside while loop"
+    buys.each{|purchase|
+      price = purchase[:bought][:close]
+      if cash > (starting_money/2)
+        if purchase[:shares]
+          purchase[:shares] +=1
+        else
+          purchase[:shares] = 1
+        end
+        cash -= price
+        money_spent_on_stocks += price
+        purchase[:paid_for] = true
+      else
+        puts "broke :("
+      end
+      puts "bought #{purchase[:shares]} shares"
+    }
+  end
+end
+
+
+  # buys.each { |purchase|
+  #   # if you can afford it
+  #   price = purchase[:bought][:close]
+  #   if price * shares_per_buy < cash
+  #     # subtract price from cash
+  #     cash -= price * shares_per_buy
+  #     money_spent_on_stocks += price * shares_per_buy
+  #     # mark purchase as paid for
+  #     purchase[:paid_for] = true
+  #   else
+  #     puts "broke :("
+  #   end
+  # }
 
   # cut  losses on stail purchases
   stale_buys = results.select { |result|
-    (result[:bought][:date]).to_date == day - days_before_stale &&
+    (result[:bought][:date]).to_date < day - days_before_stale &&
     result[:paid_for] == true &&
     result[:sold_prematurely] != true &&
     result[:sold].class == String
@@ -68,10 +92,10 @@ dates.each_with_index{ |day, index|
     unless todays_data.nil?
       #check price on this day
       todays_price = todays_data[:close]
-
+      puts "got this far"
       if todays_price < purchase[:bought][:close] * (1 - (percent_drop_for_premature_sale * 0.01))
         #sell for price on this day
-        cash += todays_price * shares_per_buy
+        cash += todays_price * day[:shares]
         # mark purchase as paid for
         purchase[:sold_prematurely] = true
         puts "SOLD AT A LOSS"
