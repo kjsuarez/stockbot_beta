@@ -8,15 +8,22 @@ require_relative 'stock_api_toucher'
 require_relative 'historical_data'
 
 class StockBot
-  attr_reader :api_toucher, :minimum_percent_change, :symbols, :year_slope_ceiling, :year_slope_floor
+  attr_reader :api_toucher, :minimum_percent_change, :minimum_percent_down_to_buy,
+              :maximum_percent_down_to_buy, :symbols, :year_slope_ceiling,
+              :year_slope_floor, :check_volatility, :radical_period, :radical_tolerance
   attr_accessor :data_arry
 
-  def initialize()
+  def initialize(check_volatility: false)
     @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @minimum_percent_change = -3
+    @minimum_percent_down_to_buy = -5
+    @maximum_percent_down_to_buy = -10
     @year_slope_ceiling = 0.046
     @year_slope_floor = 0.02
+    @check_volatility = check_volatility
+    @radical_period = 15
+    @radical_tolerance = 0.3
     @symbols = symbols
   end
 
@@ -48,7 +55,8 @@ class StockBot
 
   def filter_by_percent_change
     @data_arry = data_arry.select { |data|
-      data[:percent_change].to_f < minimum_percent_change
+      data[:percent_change].to_f < minimum_percent_down_to_buy &&
+      data[:percent_change].to_f < maximum_percent_down_to_buy
     }
   end
 
@@ -66,9 +74,11 @@ class StockBot
   end
 
   def filter_by_erratic_nature
-    @data_arry = data_arry.select { |data|
-      !erratic?(x_years_data(data[:symbol], 1), 15, 0.30)
-    }
+    if check_volatility
+      @data_arry = data_arry.select { |data|
+        !erratic?(x_years_data(data[:symbol], 1), radical_period, radical_tolerance)
+      }
+    end
   end
 
   def filter_by_maturaty
