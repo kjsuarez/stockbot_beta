@@ -55,7 +55,7 @@ class StockBot
 
   def filter_by_percent_change
     @data_arry = data_arry.select { |data|
-      data[:percent_change].to_f < minimum_percent_down_to_buy &&
+      data[:percent_change].to_f > minimum_percent_down_to_buy &&
       data[:percent_change].to_f < maximum_percent_down_to_buy
     }
   end
