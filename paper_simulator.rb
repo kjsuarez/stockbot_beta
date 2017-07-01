@@ -1,6 +1,6 @@
 require_relative 'retro_tester'
 
-tester = RetroTester.new(check_volatility: true, years_of_data: 2)
+tester = RetroTester.new(check_volatility: false, years_of_data: 2)
 tester.multi_stock_retro_test
 results = tester.results
 daily_stats = tester.daily_stats
@@ -10,7 +10,7 @@ cash = starting_money
 money_spent_on_stocks = 0
 shares_per_buy = 3
 years = tester.years_of_data
-days_before_stale = 20
+days_before_stale = 10
 percent_drop_for_premature_sale = 5
 back_then = (DateTime.now - (365*years)).to_date
 now = (DateTime.now).to_date

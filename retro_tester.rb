@@ -23,8 +23,8 @@ class RetroTester
     @data_arry = GoogleStockScraper.new.results
     @api_toucher = StockApiToucher.new
     @years_of_data = years_of_data
-    @minimum_percent_down_to_buy = -5
-    @maximum_percent_down_to_buy = -10
+    @minimum_percent_down_to_buy = -3
+    @maximum_percent_down_to_buy = -50
     @percent_up_to_sell = 2
     @year_slope_ceiling = 0.046
     @year_slope_floor = 0.02
